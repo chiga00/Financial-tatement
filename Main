@@ -1,0 +1,122 @@
+import os
+from datetime import datetime
+import matplotlib.pyplot as plt
+
+
+class Expense:
+    def __init__(self, name, amount, category, date):
+        self.name = name
+        self.amount = amount
+        self.category = category
+        self.date = date
+
+
+class ExpenseTracker:
+    def __init__(self):
+        self.expenses = []
+
+    def add_expense(self, expense):
+        self.expenses.append(expense)
+
+    def get_expenses_by_category(self, category):
+        return [expense for expense in self.expenses if expense.category == category]
+
+    def get_expenses_by_date_range(self, start_date, end_date):
+        return [expense for expense in self.expenses if start_date <= expense.date <= end_date]
+
+    def get_total_expenses_by_category(self, category):
+        expenses = self.get_expenses_by_category(category)
+        return sum(expense.amount for expense in expenses)
+
+    def get_total_expenses_by_date_range(self, start_date, end_date):
+        expenses = self.get_expenses_by_date_range(start_date, end_date)
+        return sum(expense.amount for expense in expenses)
+
+    def get_expense_report(self):
+        report = "Expense Report\n"
+        report += "-" * 60 + "\n"
+        report += f"| {'Name':<20} | {'Amount':<10} | {'Category':<20} | {'Date':<10} |\n"
+        report += "-" * 60 + "\n"
+        total_cost = 0
+        for expense in self.expenses:
+            report += f"| {expense.name:<20} | {expense.amount:<10.2f} | {expense.category:<20} | {expense.date.strftime('%Y-%m-%d'):<10} |\n"
+            total_cost += expense.amount
+        report += "-" * 60 + "\n"
+        report += f"Total cost: {total_cost:.2f}\n"
+        return report
+
+    def generate_pie_chart(self):
+        categories = {}
+        for expense in self.expenses:
+            if expense.category in categories:
+                categories[expense.category] += expense.amount
+            else:
+                categories[expense.category] = expense.amount
+        plt.pie(list(categories.values()), labels=list(categories.keys()), autopct='%1.1f%%')
+        plt.title("Expense by Category")
+        plt.show()
+
+
+tracker = ExpenseTracker()
+while True:
+    try:
+        name = input("Enter expense name (or 'q' to quit): ")
+        if name == "q":
+            break
+        amount = float(input("Enter expense amount: "))
+        category = input("Enter expense category: ")
+        date_str = input("Enter expense date (YYYY-MM-DD): ")
+        date = datetime.strptime(date_str, "%Y-%m-%d")
+        expense = Expense(name, amount, category, date)
+        tracker.add_expense(expense)
+        print()
+        print("Expense added successfully.")
+        print()
+        print("What would you like to do next?")
+        print("1. Enter another expense")
+        print("2. Print small list of expenses entered so far")
+        print("3. Print big list of all expenses entered")
+        print("4. Generate pie chart of expenses by category")
+        print("5. Delete an expense by name")
+        print("6. Delete an expense by date range")
+        choice = input("Enter your choice (1/2/3/4/5/6): ")
+        if choice == "2":
+            print("\nSmall List of Expenses Entered So Far:\n")
+            print(tracker.get_expense_report())
+        elif choice == "4":
+            tracker.generate_pie_chart()
+
+        elif choice == "3":
+            print("\nBig List of All Expenses Entered:\n")
+            print(tracker.get_expense_report())
+
+        elif choice == "5":
+            expense_name = input("Enter the name of the expense to delete: ")
+            deleted_expenses = [expense for expense in tracker.expenses if expense.name == expense_name]
+            if not deleted_expenses:
+                print("Expense not found.")
+            else:
+                for expense in deleted_expenses:
+                    tracker.expenses.remove(expense)
+                    print(f"{len(deleted_expenses)} expenses deleted successfully.")
+
+        elif choice == "6":
+            start_date_str = input("Enter the start date (YYYY-MM-DD): ")
+            end_date_str = input("Enter the end date (YYYY-MM-DD): ")
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            deleted_expenses = tracker.get_expenses_by_date_range(start_date, end_date)
+            if not deleted_expenses:
+                print("No expenses found in the given date range.")
+            else:
+                for expense in deleted_expenses:
+                    tracker.expenses.remove(expense)
+                    print(f"{len(deleted_expenses)} expenses deleted successfully.")
+
+    except ValueError:
+        print("Invalid input. Please try again.")
+        continue
+
+    except KeyboardInterrupt:
+        print("\nGoodbye!")
+        break
